@@ -1,16 +1,14 @@
-from func_timer import func_timer
+from modules.func_timer import func_timer
 from config import params
 from time import sleep
-import hue_interface
+from modules import hue_interface, utility, img_proc
 import threading
-import urllib2
-import utility
+# import urllib2
 import random
 import json
 import ast
 
-if utility.dll_check():
-    import img_proc
+# if utility.dll_check():
 
 
 # Class for running ScreenBloom thread
@@ -29,14 +27,11 @@ class ScreenBloom(threading.Thread):
         self.stoprequest.set()
         super(ScreenBloom, self).join(timeout)
 
-
 # Class for Screen object to hold values during runtime
 class Screen(object):
-    def __init__(self, ip, devicename, bulbs, bulb_settings, default,
+    def __init__(self, bulbs, bulb_settings, default,
                  rgb, update, update_buffer, max_bri, min_bri, zones, zone_state,
                  display_index, party_mode, sat, bbox):
-        self.ip = ip
-        self.devicename = devicename
         self.bulbs = bulbs
         self.bulb_settings = bulb_settings
         self.default = default
@@ -93,22 +88,19 @@ def get_screen_object():
 def initialize():
     config_dict = utility.get_config_dict()
 
-    ip = config_dict['ip']
-    username = config_dict['username']
-
     max_bri = config_dict['max_bri']
     min_bri = config_dict['min_bri']
 
-    active_lights = [int(i) for i in config_dict['active'].split(',')]
-    all_lights = [int(i) for i in config_dict['all_lights'].split(',')]
+    active_lights = json.loads(config_dict['active'])
+    all_lights = [str(i) for i in config_dict['all_lights'].split(',')]
 
-    # Check selected bulbs vs all known bulbs
-    bulb_list = []
-    for counter, bulb in enumerate(all_lights):
-        if active_lights[counter]:
-            bulb_list.append(active_lights[counter])
-        else:
-            bulb_list.append(0)
+    # # Check selected bulbs vs all known bulbs
+    # bulb_list = []
+    # for counter, bulb in enumerate(all_lights):
+    #     if active_lights[counter]:
+    #         bulb_list.append(active_lights[counter])
+    #     else:
+    #         bulb_list.append(0)
 
     bulb_settings = json.loads(config_dict['bulb_settings'])
 
@@ -130,7 +122,7 @@ def initialize():
         from desktopmagic.screengrab_win32 import getDisplayRects
         bbox = getDisplayRects()[int(display_index)]
 
-    return ip, username, bulb_list, bulb_settings, default, [], \
+    return active_lights, bulb_settings, default, [], \
            update, update_buffer, max_bri, min_bri, zones, zone_state, \
            display_index, party_mode, sat, bbox
 
@@ -150,62 +142,81 @@ def re_initialize():
 def update_bulbs(new_rgb, dark_ratio):
     screen = get_screen_object()
     screen.rgb = new_rgb
-    active_bulbs = [bulb for bulb in screen.bulbs if bulb]
+    active_bulbs = [bulb for bulb, active in screen.bulbs.items() if active]
     send_light_commands(active_bulbs, new_rgb, dark_ratio)
 
 
 # Set bulbs to initial color/brightness
 def update_bulb_default():
     screen = get_screen_object()
-    active_bulbs = [bulb for bulb in screen.bulbs if bulb]
+    active_bulbs = [bulb for bulb, active in screen.bulbs.items() if active]
 
     for bulb in active_bulbs:
-        bulb_settings = screen.bulb_settings[unicode(bulb)]
-        bulb_initial_state = json.loads(screen.default)[str(bulb)]
+        init_state = json.loads(screen.default)[str(bulb)]
+        print("this is inital state")
+        print(init_state)
+        hue_interface.update_light(bulb, init_state['rgb'], init_state['bri'])
 
-        xy = None
-        if bulb_initial_state['colormode']:
-            xy = bulb_initial_state['xy']
 
-        bulb_state = hue_interface.get_bulb_state(bulb_settings, xy, bulb_initial_state['bri'], .8)
-        hue_interface.update_light(screen.ip, screen.devicename, bulb, bulb_state)
+
+
+        # xy = None
+        # if bulb_initial_state['colormode']:
+        #     xy = bulb_initial_state['xy']
+
+        # bulb_state = hue_interface.get_bulb_state(bulb_settings, xy, bulb_initial_state['bri'], .8)
+        # hue_interface.update_light(screen.ip, screen.devicename, bulb, bulb_state)
 
 
 # Set bulbs to random RGB
 def update_bulb_party():
+    config_dict = utility.get_config_dict()
+    min_bri = config_dict['min_bri']
+    max_bri = config_dict['max_bri']
+
     screen = get_screen_object()
-    active_bulbs = [bulb for bulb in screen.bulbs if bulb]
+    active_bulbs = [bulb for bulb, active in screen.bulbs.items() if active]
     party_color = utility.party_rgb()
-    send_light_commands(active_bulbs, party_color, 0.0, party=True)
+    hue_interface.update_all_lights(active_bulbs, party_color, random.randrange(int(min_bri), int(max_bri) + 1))
 
 
 def send_light_commands(bulbs, rgb, dark_ratio, party=False):
     screen = get_screen_object()
+    config_dict = utility.get_config_dict()
+    min_bri = config_dict['min_bri']
+    max_bri = config_dict['max_bri']
 
-    bulb_states = {}
-    for bulb in bulbs:
-        bulb_settings = screen.bulb_settings[unicode(bulb)]
-        bulb_max_bri = bulb_settings['max_bri']
-        bulb_min_bri = bulb_settings['min_bri']
-        bri = utility.get_brightness(screen, bulb_max_bri, bulb_min_bri, dark_ratio)
+    bri = utility.get_brightness(screen, min_bri, max_bri, dark_ratio)
+    print("this is bulbs")
+    print(bulbs)
 
-        if party:
-            rgb = utility.party_rgb()
-            try:
-                bri = random.randrange(int(screen.min_bri), int(bri) + 1)
-            except ValueError:
-                continue
+    hue_interface.update_all_lights(bulbs, rgb,  bri)
 
-        try:
-            bulb_settings = screen.bulb_settings[str(bulb)]
-            bulb_state = hue_interface.get_bulb_state(bulb_settings, rgb, bri, screen.update)
-            bulb_states[bulb] = bulb_state
-        except Exception as e:
-            print e.message
-            continue
+    # for bulb in bulbs:
+    #     bulb_settings = screen.bulb_settings[str(bulb)]
+    #     bulb_max_bri = bulb_settings['max_bri']
+    #     bulb_min_bri = bulb_settings['min_bri']
+    #     bri = utility.get_brightness(screen, bulb_max_bri, bulb_min_bri, dark_ratio)
 
-    for bulb in bulb_states:
-        hue_interface.update_light(screen.ip, screen.devicename, bulb, bulb_states[bulb])
+    #     if party:
+    #         rgb = utility.party_rgb()
+    #         try:
+    #             bri = random.randrange(int(screen.min_bri), int(bri) + 1)
+    #         except ValueError:
+    #             continue
+
+    #     hue_interface.update_light(bulb, rgb, bri)
+
+    #     try:
+    #         bulb_settings = screen.bulb_settings[str(bulb)]
+    #         bulb_state = hue_interface.get_bulb_state(bulb_settings, rgb, bri, screen.update)
+    #         bulb_states[bulb] = bulb_state
+    #     except Exception as e:
+    #         print(e.message)
+    #         continue
+
+    # for bulb in bulb_states:
+    #     hue_interface.update_light(screen.ip, screen.devicename, bulb, bulb_states[bulb])
 
 
 # Main loop
@@ -235,5 +246,5 @@ def screenbloom_control_flow(screen_avg_results):
             rgb = screen_avg_results['rgb']
             dark_ratio = screen_avg_results['dark_ratio']
             update_bulbs(rgb, dark_ratio)
-    except urllib2.URLError:
+    except Exception as e:
         pass

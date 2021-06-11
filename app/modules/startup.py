@@ -2,12 +2,9 @@ from tornado.httpserver import HTTPServer
 from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
 from config import params
-import sb_controller
+from modules import sb_controller, view_logic, utility, presets
 import webbrowser
-import view_logic
 import threading
-import utility
-import presets
 import socket
 import json
 import os

@@ -1,11 +1,13 @@
 from PIL import ImageEnhance
 from config import params
-import utility
+import modules.utility
 
 if params.BUILD == 'win':
     from desktopmagic.screengrab_win32 import getDisplaysAsImages, getRectAsImage
-else:
+elif params.BUILD=='mac':
     from PIL import ImageGrab
+elif params.BUILD=='linux':
+    import pyscreenshot as ImageGrab
 
 
 LOW_THRESHOLD = 10

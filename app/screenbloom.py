@@ -1,6 +1,6 @@
 from modules import sb_controller, startup, utility, view_logic, registration, presets, hue_interface
 from flask import Flask, render_template, jsonify, request
-import modules.vendor.rgb_xy as rgb_xy
+# import vendor.rgb_xy as rgb_xy
 from config import params
 import argparse
 import json
@@ -36,9 +36,13 @@ def index():
     data = view_logic.get_index_data()
     zones = json.dumps(data['zones']) if data['zones'] else []
 
-    helper = rgb_xy.ColorHelper()
-    white = helper.get_rgb_from_xy_and_brightness(0.336, 0.360, 1)
-    blue = helper.get_rgb_from_xy_and_brightness(0.167, 0.0399, 1)
+    # helper = rgb_xy.ColorHelper()
+    white = [0,0,0]
+    blue = [0,0,255]
+
+    lightJs = {}
+    for light in data['lights']:
+      lightJs[light['id']] = light['active']
 
     return render_template('/home.html',
                            update=data['update'],
@@ -50,7 +54,7 @@ def index():
                            blue=blue,
                            lights=data['lights'],
                            lights_number=data['lights_number'],
-                           lightsJs=[1 if light[3] else 0 for light in data['lights']],
+                           lightsJs=lightJs,
                            icon_size=data['icon_size'],
                            party_mode=data['party_mode'],
                            zones=zones,
@@ -114,8 +118,8 @@ def manual():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    hue_ip = request.args.get('hue_ip', 0, type=str)
-    data = registration.register_logic(hue_ip, utility.get_local_host())
+    # hue_ip = request.args.get('hue_ip', 0, type=str)
+    data = registration.register_logic(utility.get_local_host())
     return jsonify(data)
 
 
@@ -248,18 +252,18 @@ def update_zones():
 def update_bulbs():
     if request.method == 'POST':
         bulb_data = request.json
-        bulbs = str(bulb_data['bulbs'])
+        bulbs = bulb_data['bulbs']
         bulb_settings = bulb_data['bulbSettings']
         sb_config = utility.get_config_dict()
 
-        lights_data = hue_interface.get_lights_data(sb_config['ip'], sb_config['username'])
-        for light in lights_data:
-            bulb = bulb_settings[str(light[0])]
-            bulb['model_id'] = light[4]
-            bulb['gamut'] = hue_interface.get_gamut(bulb['model_id'])
-            bulb['name'] = light[2]
+        # lights_data = hue_interface.get_lights_data()
+        # for light in lights_data:
+        #     bulb = bulb_settings[str(light[0])]
+        #     bulb['model_id'] = light[4]
+        #     bulb['gamut'] = hue_interface.get_gamut(bulb['model_id'])
+        #     bulb['name'] = light[2]
 
-        utility.write_config('Light Settings', 'active', bulbs)
+        utility.write_config('Light Settings', 'active', json.dumps(bulbs))
         utility.write_config('Light Settings', 'bulb_settings', json.dumps(bulb_settings))
         view_logic.restart_check()
 
@@ -315,7 +319,7 @@ def get_diagnostic_data():
     if request.method == 'POST':
         message = 'POOPSOCK'
         config = utility.get_config_dict()
-        light_data = hue_interface.get_light_diagnostic_data(config['ip'], config['username'])
+        light_data = hue_interface.get_light_diagnostic_data()
 
         data = {
             'message': message,

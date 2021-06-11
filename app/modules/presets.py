@@ -1,7 +1,5 @@
-import hue_interface
-import ConfigParser
-import view_logic
-import utility
+from modules import hue_interface, utility, view_logic
+import configparser
 import random
 import json
 import os

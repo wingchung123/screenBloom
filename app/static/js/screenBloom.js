@@ -20,7 +20,7 @@ screenBloom.config = {
     'currentPreset'     : '',
     'faClassNames'      : [],
     'colors'            : [],
-    'bulbs'             : []
+    'bulbs'             : {}
 };
 
 screenBloom.init = function() {
@@ -73,13 +73,14 @@ screenBloom.init = function() {
 
 function activeBulbsCheck() {
     var allBulbsInactive = true;
-
-    for (var i in screenBloom.config.bulbs) {
-        var bulb = parseInt(screenBloom.config.bulbs[i]);
-        if (bulb > 0) {
-            allBulbsInactive = false;
+    console.log(screenBloom.config.bulbs)
+    for (var key in screenBloom.config.bulbs) {
+        value = screenBloom.config.bulbs[key]
+        if(value){
+            allBulbsInactive = false
         }
     }
+
 
     if (allBulbsInactive) {
         notification('No bulbs currently selected for ScreenBloom to address.');
@@ -331,7 +332,7 @@ function bulbSelect() {
 
     // Create active bulbs string from .bulb-container CSS class, send to server to be written
     $('.update-bulbs').on('click', function () {
-        var bulbs = [],
+        var bulbs = {},
             loadingIcon = $(this).find('.loader'),
             inputText = $(this).find('.setting-input-text'),
             that = $(this),
@@ -342,11 +343,14 @@ function bulbSelect() {
         that.addClass('button-selected');
 
         $('.bulb-container').each(function () {
+            bulb_id = $(this).data('light')
+            active = true 
             if ($(this).hasClass('bulb-inactive')) {
-                bulbs.push(0);
+                active = false
             } else {
-                bulbs.push($(this).data('light'));
+                active = true;
             }
+            bulbs[bulb_id] = active
         });
 
         $('.bulb-settings-wrapper').each(function() {
@@ -361,7 +365,7 @@ function bulbSelect() {
         });
 
         var dataToSend = {
-            'bulbs'         : bulbs.toString(),
+            'bulbs'         : bulbs,
             'bulbSettings'  : bulbSettings
         };
 
@@ -373,7 +377,7 @@ function bulbSelect() {
             success: function (result) {
                 $('.bulb-container').removeClass('bulb-settings-open');
                 $('.bulb-settings-wrapper').addClass('hidden');
-                screenBloom.config.bulbs = result.bulbs.split(',');
+                screenBloom.config.bulbs = result.bulbs;
                 notification(result.message);
                 $('.update-bulbs').addClass('hidden');
                 inputText.removeClass('hidden');
@@ -440,6 +444,7 @@ function startStopBtns() {
                 'text-shadow': '1px 1px 3px rgba(0, 0, 0, 0.3)'
             });
             inputText.text('Running...');
+            console.log('Running...')
             activeBulbsCheck();
         }
     });
@@ -827,17 +832,19 @@ function clickRegister() {
     $('#register').on('click', function () {
         var wrapper = $('.result-wrapper'),
             loadingIcon = '<i id="loading" class="fa fa-spinner fa-spin"></i>',
-            script = '<script type="text/javascript">colorLoading();</script>',
-            hue_ip = $('#hue-ip').val();
-
+            script = '<script type="text/javascript">colorLoading();</script>'
+            // username = $('#username').val();
+            // password = $('#password').val();
         wrapper.empty();
         wrapper.append(loadingIcon);
         wrapper.append(script);
 
         wrapper.fadeIn('fast');
-        $.getJSON($SCRIPT_ROOT + '/register', {
-            hue_ip: hue_ip
-        }, function (data) {
+        $.getJSON($SCRIPT_ROOT + '/register', 
+        {
+            // hue_ip: hue_ip
+        },
+        function (data) {
             if (data['success'] === true) {
                 console.log(data);
                 var html = '<div class="result-type"><h1 class="raleway animate">Success!</h1>' +

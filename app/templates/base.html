@@ -91,19 +91,19 @@
                 screenBloom.config.currentPreset = '{{ current_preset }}';
                 screenBloom.config.faClassNames = {{ fa_class_names|safe if fa_class_names is defined else [] }};
 
-                {% if lights %}
-                screenBloom.config.bulbs = {{ lightsJs }};
-                {% endif %}
+
+                screenBloom.config.bulbs = {}
 
                 {% if default_color %}
                 screenBloom.config.defaultColor = '{{ default_color|safe }}';
                 {% endif %}
-                screenBloom.init();
 
                 var lights = {};
                 {% for light in lights %}
-                    lights[{{ light[0] }}] = '{{ light[2] }}';
+                    lights['{{ light.id }}'] = '{{ light.name }}';
+                    screenBloom.config.bulbs['{{ light.id }}'] = '{{ light.active }}';
                 {% endfor %}
+                screenBloom.init();
 
                 screenBloomPresets.init();
 

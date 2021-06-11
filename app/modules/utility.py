@@ -1,17 +1,16 @@
 from config import params
-import hue_interface
-import ConfigParser
-import icon_names
+from modules import hue_interface, icon_names
+import configparser
 import traceback
 import requests
-import StringIO
+import io
 import socket
 import shutil
 import random
 import json
 import sys
 import os
-
+import base64
 
 def dll_check():
     try:
@@ -43,11 +42,28 @@ def config_check():
         # Grab config variables, will throw an error if there is a mismatch
         test = get_config_dict()
         return True
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         return False
-    except ConfigParser.NoSectionError:
+    except configparser.NoSectionError:
         return False
 
+def get_config_dir(old_check=False):
+    config_path = ''
+
+    if params.BUILD == 'win':
+        config_path = os.getenv('APPDATA') + '\\screenBloom' if not old_check else os.getenv('APPDATA')
+    elif params.BUILD == 'mac':
+        config_path = ''
+        if getattr(sys, 'frozen', False):
+            config_path = os.path.dirname(sys.executable)
+        elif __file__:
+            config_path = os.path.dirname(__file__)
+    else:
+        config_path = os.getcwd() + '/screenBloom' if not old_check else os.getcwd()
+        return config_path
+
+
+    return config_path 
 
 def get_config_path(old_check=False):
     config_path = ''
@@ -60,6 +76,10 @@ def get_config_path(old_check=False):
             config_path = os.path.dirname(sys.executable)
         elif __file__:
             config_path = os.path.dirname(__file__)
+    else:
+        config_path = os.getcwd() + '/screenBloom' if not old_check else os.getcwd()
+        return config_path + '/screenBloom_config.cfg'
+
 
     return config_path + '\\screenBloom_config.cfg'
 
@@ -93,11 +113,11 @@ def check_server(host, port):
 
 # Rewrite config file with given arguments
 def write_config(section, item, value):
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read(get_config_path())
     config.set(section, item, value)
 
-    with open(get_config_path(), 'wb') as config_file:
+    with open(get_config_path(), 'w') as config_file:
         config.write(config_file)
 
 
@@ -125,14 +145,16 @@ def get_screenshot(display_index):
         except IndexError:
             img = imgs[0]
     # Mac version
-    else:
+    elif params.BUILD == 'mac':
         from PIL import ImageGrab
         img = ImageGrab.grab()
+    elif params.BUILD == 'linux':
+        import pyscreenshot as ImageGrab
+        img = ImageGrab.grab()
 
-    tmp = StringIO.StringIO()
+    tmp = io.BytesIO()
     img.save(tmp, format="PNG")
-    b64_data = tmp.getvalue().encode('base64')
-    return b64_data
+    return base64.b64encode(tmp.read())
 
 
 def get_multi_monitor_screenshots():
@@ -140,9 +162,9 @@ def get_multi_monitor_screenshots():
     screenshots = []
 
     for img in imgs:
-        tmp = StringIO.StringIO()
+        tmp = io.BytesIO()
         img.save(tmp, format="PNG")
-        b64_data = tmp.getvalue().encode('base64')
+        b64_data = base64.b64encode(tmp.read())
         screenshots.append(b64_data)
 
     return screenshots
@@ -185,11 +207,9 @@ def get_transition_time(update_speed):
 
 
 def get_config_dict():
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read(get_config_path())
 
-    ip = config.get('Configuration', 'hue_ip')
-    username = config.get('Configuration', 'username')
     autostart = config.getboolean('Configuration', 'auto_start')
     current_preset = config.get('Configuration', 'current_preset')
 
@@ -211,8 +231,6 @@ def get_config_dict():
     app_state = config.getboolean('App State', 'running')
 
     return {
-        'ip': ip,
-        'username': username,
         'autostart': autostart,
         'current_preset': current_preset,
         'all_lights': all_lights,
@@ -233,10 +251,11 @@ def get_config_dict():
 
 
 def get_json_filepath(old_check=False):
+    path = os.getenv('APPDATA') if os.getenv('APPDATA') is not None else os.getcwd()
     if old_check:
-        filepath = os.getenv('APPDATA') + '\\screenBloom_presets.json'
+        filepath = path+ '\\screenBloom_presets.json'
     else:
-        filepath = os.getenv('APPDATA') + '\\screenBloom\\screenBloom_presets.json'
+        filepath = path + '\\screenBloom\\screenBloom_presets.json'
     return filepath
 
 
@@ -264,34 +283,29 @@ def get_fa_class_names():
 # Will continue to expand this function as the bulb_settings JSON gets added to
 def get_current_light_settings():
     config_dict = get_config_dict()
-    lights_data = hue_interface.get_lights_data(config_dict['ip'], config_dict['username'])
+    lights_data = hue_interface.get_lights_data()
     light_settings = {}
     for light in lights_data:
-        light_settings[str(light[0])] = {
-            'name': light[2],
-            'model_id': light[4],
-            'gamut': hue_interface.get_gamut(light[4])
+        light_settings[str(light['id'])] = {
+            'name': light['name'],
+            'model_id': light['product_code'],
+            'rgb': light['rgb']
         }
     return light_settings
 
 
-def get_hue_initial_state(ip, username):
-    light_data = hue_interface.get_lights_data(ip, username)
+def get_initial_state():
+    light_data = hue_interface.get_lights_data()
 
     initial_lights_state = {}
     for light in light_data:
-        initial_lights_state[light[0]] = {
-            'state': light[1],
-            'bri': light[5],
-            'xy': light[6],
-            'colormode': light[7]
-        }
+        initial_lights_state[light['id']] = light
     return initial_lights_state
 
 
 def write_light_data_to_file():
     config = get_config_dict()
-    light_data = hue_interface.get_all_lights(config['ip'], config['username'])
+    light_data = hue_interface.get_all_lights()
     with open('LIGHT_DATA.txt', 'w') as f:
         json.dump(light_data, f)
 

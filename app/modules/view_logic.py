@@ -1,6 +1,4 @@
-import sb_controller
-import hue_interface
-import utility
+from modules import sb_controller, hue_interface, utility
 import json
 import ast
 
@@ -8,8 +6,7 @@ import ast
 def get_index_data():
     config_dict = utility.get_config_dict()
 
-    hue_ip = config_dict['ip']
-    username = config_dict['username']
+
     auto_start = config_dict['autostart']
     current_preset = config_dict['current_preset']
 
@@ -27,13 +24,13 @@ def get_index_data():
 
     state = config_dict['app_state']
 
-    lights = hue_interface.get_lights_data(hue_ip, username)
-    for light in lights:
-        light.append(int(bulb_settings[unicode(light[0])]['max_bri']))
-        light.append(int(bulb_settings[unicode(light[0])]['min_bri']))
-        light[2] = str(light[2])
+    lights = hue_interface.get_lights_data()
+    # for light in lights:
+    #     light.append(int(bulb_settings[unicode(light[0])]['max_bri']))
+    #     light.append(int(bulb_settings[unicode(light[0])]['min_bri']))
+    #     light[2] = str(light[2])
 
-    lights.sort(key=lambda x: x[2])
+    lights.sort(key=lambda x: x['id'])
     presets = utility.get_all_presets()
 
     icon_size = 10
@@ -50,7 +47,6 @@ def get_index_data():
         'lights': lights,
         'lights_number': len(lights),
         'icon_size': icon_size,
-        'username': username,
         'party_mode': party_mode,
         'zones': zones,
         'zone_state': zone_state,

@@ -1,3 +1,3 @@
 ENV = 'dev'
-BUILD = 'win'
+BUILD = 'linux'
 VERSION = 2.2

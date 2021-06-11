@@ -9,6 +9,6 @@ def func_timer(func):
         value = func(*args, **kwargs)  # Nested function execution
         end = time()
         runtime = end - start
-        print '|| [Execution Time] {func}() {time:02.4f} seconds'.format(func=func.__name__, time=runtime)
+        # print(f'|| [Execution Time] {func.__name__}() {runtime:02.4f} seconds')
         return value
     return function_timer
