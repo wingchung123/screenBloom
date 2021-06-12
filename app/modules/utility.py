@@ -138,12 +138,14 @@ def party_rgb():
 def get_screenshot(display_index):
     # Win version
     if params.BUILD == 'win':
-        from desktopmagic.screengrab_win32 import getDisplaysAsImages
-        imgs = getDisplaysAsImages()
-        try:
-            img = imgs[int(display_index)]
-        except IndexError:
-            img = imgs[0]
+        # from desktopmagic.screengrab_win32 import getDisplaysAsImages
+        # imgs = getDisplaysAsImages()
+        # try:
+        #     img = imgs[int(display_index)]
+        # except IndexError:
+        #     img = imgs[0]
+        from PIL import ImageGrab
+        img = ImageGrab.grab()  
     # Mac version
     elif params.BUILD == 'mac':
         from PIL import ImageGrab

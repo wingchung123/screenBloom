@@ -144,3 +144,12 @@ Forks and pull requests very welcome! Don't hesitate to contact me or raise an i
 2. [Grab the static files](http://www.screenbloom.com/static/distribute/screenbloom_2.2_static_files.zip)
 3. Setup your **[virtualenv](http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)** with Python 2
 4. Install the dependencies with `pip install -r requirements.txt`
+
+
+### Sengled:
+1. Python version 3.6
+2. create venv
+3. pip install -r requirements.txt
+4. if windows:
+5. run `pip install pywin32....whl`
+6. run `python Scripts\pywin32_postinstall.py -install`

@@ -75,6 +75,7 @@ def start_screenbloom():
     data = {
         'message': message
     }
+    print(message)
     return data
 
 
@@ -82,6 +83,7 @@ def stop_screenbloom():
     sb_controller.stop()
     sb_controller.re_initialize()
     sb_controller.update_bulb_default()
+    print("ScreenBloom stopped")
 
     data = {
         'message': 'ScreenBloom stopped'

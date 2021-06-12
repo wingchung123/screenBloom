@@ -100,38 +100,6 @@
         </div>
     </div>
 
-    <!-- Only Win version supports multiple displays -->
-    {% if build == 'win' %}
-    <div class="setting setting-md">
-        <div class="setting-circle"><img class="setting-img" src="data:image/png;base64,{{ multi_monitor_screens[display_index] }}"></div>
-        <div class="setting-label">Choose<br>Display</div>
-
-        <div class="setting-input hidden" style="max-width: 25em;">
-            <div class="setting-input-label">
-                <div>Choose Display</div>
-                <i class="fa fa-question-circle-o simple-tooltip" aria-hidden="true" title="Choose which display ScreenBloom will parse."></i>
-            </div>
-            <i class="fa fa-close setting-input-close"></i>
-            <div class="setting-input-spacer"></div>
-
-            <div class="display-container">
-                {% for screen in multi_monitor_screens %}
-                <div class="display-icon" data-index="{{ loop.index0 }}">
-                    <img src="data:image/png;base64,{{ screen }}">
-                    {% if display_index == loop.index0 %}
-                    <div class="display-icon-selected">Selected</div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="setting-input-submit" data-url="displayUrl">
-                <i class="fa fa-gear fa-spin loader hidden"></i>
-                <span class="setting-input-text"><i class="fa fa-floppy-o"></i> Save</span>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <div class="setting party-mode-btn">
         <div class="setting-circle {{ 'setting-clicked' if party_mode }} party-mode-circle simple-tooltip" title="Sends a random color to each active bulb using your selected transition speed.">

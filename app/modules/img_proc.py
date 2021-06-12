@@ -3,7 +3,8 @@ from config import params
 import modules.utility
 
 if params.BUILD == 'win':
-    from desktopmagic.screengrab_win32 import getDisplaysAsImages, getRectAsImage
+    # from desktopmagic.screengrab_win32 import getDisplaysAsImages, getRectAsImage
+    from PIL import ImageGrab
 elif params.BUILD=='mac':
     from PIL import ImageGrab
 elif params.BUILD=='linux':
@@ -73,11 +74,12 @@ def screen_avg(_screen):
 
     # Win version uses DesktopMagic for multiple displays
     if params.BUILD == 'win':
-        try:
-            img = getRectAsImage(_screen.bbox)
-        except IndexError:
-            utility.display_check(_screen)
-            img = getRectAsImage(_screen.bbox)
+        # try:
+        #     img = getRectAsImage(_screen.bbox)
+        # except IndexError:
+        #     utility.display_check(_screen)
+        #     img = getRectAsImage(_screen.bbox)
+        img = ImageGrab.grab()
     # Mac version uses standard PIL ImageGrab
     else:
         img = ImageGrab.grab()
@@ -108,5 +110,5 @@ def screen_avg(_screen):
     return screen_data
 
 
-def get_monitor_screenshots():
-    return getDisplaysAsImages()
+# def get_monitor_screenshots():
+#     return getDisplaysAsImages()

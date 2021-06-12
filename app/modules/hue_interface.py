@@ -16,7 +16,7 @@ api = sengled.api(
 
     # Optional path to persist the session across multiple process
     # starts and reduce the number of logins.
-    session_path="/tmp/sengled.pickle",
+    # session_path="/tmp/sengled.pickle",
 
     # Prints details of the api request/responses when True, defaults to false.
     debug=True

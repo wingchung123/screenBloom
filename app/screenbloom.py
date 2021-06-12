@@ -29,9 +29,9 @@ elif params.ENV == 'dev':
 @app.route('/')
 def index():
     multi_screenshots = None
-    if params.BUILD == 'win':
-        utility.display_check(sb_controller.get_screen_object())
-        multi_screenshots = utility.get_multi_monitor_screenshots()
+    # if params.BUILD == 'win':
+    #     utility.display_check(sb_controller.get_screen_object())
+    #     multi_screenshots = utility.get_multi_monitor_screenshots()
 
     data = view_logic.get_index_data()
     zones = json.dumps(data['zones']) if data['zones'] else []

@@ -19,3 +19,4 @@ Werkzeug==0.14.1
 sengled-client==0.0.2
 configparser==5.0.2
 pyscreenshot==3.0
+win32gui==221.6

@@ -61,6 +61,7 @@ def start():
     t.start()
 
     hue_interface.lights_on_off('on')
+    print("Start is ran")
     utility.write_config('App State', 'running', True)
 
 
@@ -86,6 +87,7 @@ def get_screen_object():
 
 # Grab attributes for screen instance
 def initialize():
+    print("initializing screen")
     config_dict = utility.get_config_dict()
 
     max_bri = config_dict['max_bri']
@@ -118,9 +120,9 @@ def initialize():
     sat = config_dict['sat']
 
     bbox = None
-    if params.BUILD == 'win':
-        from desktopmagic.screengrab_win32 import getDisplayRects
-        bbox = getDisplayRects()[int(display_index)]
+    # if params.BUILD == 'win':
+    #     from desktopmagic.screengrab_win32 import getDisplayRects
+    #     bbox = getDisplayRects()[int(display_index)]
 
     return active_lights, bulb_settings, default, [], \
            update, update_buffer, max_bri, min_bri, zones, zone_state, \
