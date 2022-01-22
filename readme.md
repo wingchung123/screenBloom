@@ -153,3 +153,4 @@ Forks and pull requests very welcome! Don't hesitate to contact me or raise an i
 4. if windows:
 5. run `pip install pywin32....whl`
 6. run `python Scripts\pywin32_postinstall.py -install`
+7. create a file called 'cred.txt' within repo root dir and add in email & password for sengled (common separated)
