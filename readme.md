@@ -147,10 +147,17 @@ Forks and pull requests very welcome! Don't hesitate to contact me or raise an i
 
 
 ### Sengled:
-1. Python version 3.6
-2. create venv
-3. pip install -r requirements.txt
-4. if windows:
-5. run `pip install pywin32....whl`
-6. run `python Scripts\pywin32_postinstall.py -install`
+1. Python version 3.6 (Only 3.6 will work with the win32 requirement)
+2. Create venv w/ env folder (python -m venv env)
+3. Activate Virtual Environment (env\Scripts\activate)
+- If unable to activate, run this in powershell Administrator `powershell Set-ExecutionPolicy RemoteSigned`
+4. pip install -r app\requirements.txt
+5. if windows:
+6. run `python env\Scripts\pywin32_postinstall.py -install`
 7. create a file called 'cred.txt' within repo root dir and add in email & password for sengled (common separated)
+8. Setup Flask app
+  - One of the following set of commands should work
+  - `$env:FLASK_APP="app\screenbloom.py"
+    $env:FLASK_ENV="development"`
+  - `SET FLASK_APP=app\screenbloom.py
+    SET FLASK_ENV=development`
