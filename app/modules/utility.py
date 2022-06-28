@@ -20,7 +20,7 @@ def dll_check():
     return True
 
 if dll_check():
-    import img_proc
+    import modules.img_proc
 
 if params.ENV == 'prod':
     current_path = ''
